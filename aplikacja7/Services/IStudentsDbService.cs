@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Claims;
 using aplikacja7.DTOs.Requests;
 using aplikacja7.Models;
 
@@ -12,6 +13,7 @@ namespace aplikacja7.Services
         public Student GetStudent(string IndexNumber); // pojedynczy student po indeksie
         public void UpdateStudent(int id);
         public void DeleteStudent(int id);
+        public Claim[] Login(LoginRequestDto request);
 
 
         // from EnrollmentsController

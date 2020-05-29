@@ -3,25 +3,32 @@ using aplikacja7.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using aplikacja7.DTOs.Requests;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using aplikacja7.Services;
 
 namespace aplikacja7.Controllers
 {
 
         [ApiController]
-        
-        public class StudentsController : ControllerBase
+        [Route("api/students")]         
+    public class StudentsController : ControllerBase
         {
             private readonly IStudentsDbService _studentsDbService;
+            private readonly IConfiguration _configuration;
 
-            public StudentsController(IStudentsDbService studentsDbService)
-            {
-                _studentsDbService = studentsDbService;
+        public StudentsController(IStudentsDbService studentsDbService, IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _studentsDbService = studentsDbService;
             }
 
          private const string CONNECTION_STRING = "Data Source=db-mssql;Initial Catalog=s16478;Integrated Security=True";
 
-        [Route("api/students")]
         [HttpGet]
         public IActionResult GetStudents()
         {
@@ -57,6 +64,34 @@ namespace aplikacja7.Controllers
         {
 
             return Ok("Student deleted");
+        }
+
+
+        [HttpPost]
+        [Route("login")]
+        public IActionResult Login(LoginRequestDto request)
+        {
+
+            var claims = _studentsDbService.Login(request);
+            if (claims == null)
+            {
+                return Unauthorized("Nie masz dostepu do bazy");
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecretKey"]));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(
+                issuer: "Gakko",
+                audience: "Students",
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(10),
+                signingCredentials: creds
+            );
+            return Ok(new
+            {
+                token = new JwtSecurityTokenHandler().WriteToken(token)
+            });
         }
 
     }

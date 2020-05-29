@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using aplikacja7.DTOs.Requests;
 using aplikacja7.Models;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 namespace aplikacja7.Services
@@ -250,6 +251,31 @@ namespace aplikacja7.Services
                     return newPromotionEnrollment;
                 }
             }
+        }
+
+
+
+        public Claim[] Login(LoginRequestDto request)
+        {
+            using (var connection = new SqlConnection(CONNECTION_STRING))
+            using (var command = new SqlCommand())
+            {
+                command.Connection = connection;
+                connection.Open();
+                command.CommandText = "SELECT Role FROM Student WHERE IndexNumber = @index and Password = @password;";
+                command.Parameters.AddWithValue("index", request.Login);
+                command.Parameters.AddWithValue("password", request.Password);
+                var dataReader = command.ExecuteReader();
+                if (dataReader.Read())
+                {
+                    return new[]
+                    {
+                        new Claim(ClaimTypes.Name, request.Login),
+                        new Claim(ClaimTypes.Role, dataReader["Role"].ToString())
+                    };
+                }
+            }
+            return null;
         }
     }
 }

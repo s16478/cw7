@@ -1,14 +1,15 @@
-﻿using System;
-using System.Data.SqlClient;
-using aplikacja7.DTOs.Requests;
+﻿using aplikacja7.DTOs.Requests;
 using aplikacja7.Models;
 using aplikacja7.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace aplikacja7.Controllers
 {
     [ApiController]
+    [Authorize(Roles = "employee")]
     public class EnrollmentsController : ControllerBase
     {
         private readonly IStudentsDbService _studentsDbService;
