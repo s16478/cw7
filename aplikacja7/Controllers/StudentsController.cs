@@ -19,11 +19,11 @@ namespace aplikacja7.Controllers
     public class StudentsController : ControllerBase
         {
             private readonly IStudentsDbService _studentsDbService;
-            private readonly IConfiguration _configuration;
+           public IConfiguration Configuration { get; set; }
 
         public StudentsController(IStudentsDbService studentsDbService, IConfiguration configuration)
         {
-            _configuration = configuration;
+            Configuration = configuration;
             _studentsDbService = studentsDbService;
             }
 
@@ -72,13 +72,22 @@ namespace aplikacja7.Controllers
         public IActionResult Login(LoginRequestDto request)
         {
 
-            var claims = _studentsDbService.Login(request);
+            //var claims = _studentsDbService.Login(request);
+
+            var claims = new[] {
+            new Claim(ClaimTypes.NameIdentifier, "2"),
+            new Claim(ClaimTypes.Name, "adam"),
+            new Claim(ClaimTypes.Role, "employee"),
+            new Claim(ClaimTypes.Role, "student")
+            };
+
             if (claims == null)
             {
-                return Unauthorized("Nie masz dostepu do bazy");
+                return Unauthorized();
             }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecretKey"]));
+          
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecretKey"]));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
@@ -90,7 +99,8 @@ namespace aplikacja7.Controllers
             );
             return Ok(new
             {
-                token = new JwtSecurityTokenHandler().WriteToken(token)
+                token = new JwtSecurityTokenHandler().WriteToken(token),
+                refreshToken = Guid.NewGuid()  // kiedy biezacy token wygasnie
             });
         }
 
